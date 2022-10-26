@@ -1,4 +1,5 @@
 import abc
+import dask.dataframe as dd
 import os
 import jinja2
 import re
@@ -11,7 +12,10 @@ class Destination(Node):
 
     """
     def __new__(cls, *args, **kwargs):
-        return object.__new__(FileDestination)
+        if kwargs.get('extension') == 'csv':
+            return object.__new__(CsvDestination)
+        else:
+            return object.__new__(FileDestination)
 
 
     def __init__(self, *args, **kwargs):
@@ -155,6 +159,44 @@ class FileDestination(Destination):
 
             if self.footer:
                 fp.write(self.footer)
+
+        self.logger.debug(f"output `{self.file}` written")
+        self.size = os.path.getsize(self.file)
+
+
+class CsvDestination(Destination):
+    """
+
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mode = 'csv'
+        self.file = None
+
+
+    def compile(self):
+        """
+
+        """
+        super().execute()
+
+        self.file = os.path.join(
+            self.earthmover.state_configs['output_dir'],
+            f"{self.name}.csv"
+        )
+
+
+    def execute(self):
+        """
+
+        :return:
+        """
+        super().execute()
+
+        self.data = self.data.fillna('')
+
+        os.makedirs(os.path.dirname(self.file), exist_ok=True)
+        dd.to_csv(self.data, self.file, single_file=True)
 
         self.logger.debug(f"output `{self.file}` written")
         self.size = os.path.getsize(self.file)
