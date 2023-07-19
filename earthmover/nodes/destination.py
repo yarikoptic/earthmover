@@ -134,7 +134,7 @@ class FileDestination(Destination):
         self.data = self.data.fillna('')
 
         os.makedirs(os.path.dirname(self.file), exist_ok=True)
-        self.data.to_parquet(self.file)
+        self.data.to_parquet(self.file, overwrite=True)
 
         # with open(self.file, 'w', encoding='utf-8') as fp:
         #
