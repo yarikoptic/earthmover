@@ -134,28 +134,30 @@ class FileDestination(Destination):
         self.data = self.data.fillna('')
 
         os.makedirs(os.path.dirname(self.file), exist_ok=True)
-        with open(self.file, 'w', encoding='utf-8') as fp:
+        self.data.to_parquet(self.file)
 
-            if self.header:
-                fp.write(self.header + "\n")
-
-            for row_data in self.data.itertuples(index=False):
-                _data_tuple = dict(row_data._asdict().items())
-                _data_tuple["__row_data__"] = row_data._asdict()
-
-                try:
-                    json_string = self.jinja_template.render(_data_tuple)
-
-                except Exception as err:
-                    self.error_handler.throw(
-                        f"error rendering Jinja template in `template` file {self.template} ({err})"
-                    )
-                    raise
-
-                fp.write(json_string + "\n")
-
-            if self.footer:
-                fp.write(self.footer)
+        # with open(self.file, 'w', encoding='utf-8') as fp:
+        #
+        #     if self.header:
+        #         fp.write(self.header + "\n")
+        #
+        #     for row_data in self.data.itertuples(index=False):
+        #         _data_tuple = dict(row_data._asdict().items())
+        #         _data_tuple["__row_data__"] = row_data._asdict()
+        #
+        #         try:
+        #             json_string = self.jinja_template.render(_data_tuple)
+        #
+        #         except Exception as err:
+        #             self.error_handler.throw(
+        #                 f"error rendering Jinja template in `template` file {self.template} ({err})"
+        #             )
+        #             raise
+        #
+        #         fp.write(json_string + "\n")
+        #
+        #     if self.footer:
+        #         fp.write(self.footer)
 
         self.logger.debug(f"output `{self.file}` written")
         self.size = os.path.getsize(self.file)
