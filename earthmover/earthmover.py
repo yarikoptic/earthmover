@@ -355,6 +355,13 @@ class Earthmover:
             self.logger.info(f"filtering dataflow graph using selector `{selector}`")
 
         active_graph = self.graph.select_subgraph(selector)
+
+        self.logger.debug(
+            f"Active graph: \n"
+            f"Nodes: {active_graph.nodes}\n"
+            f"Edges: {active_graph.edges}\n"
+        )
+
         self.compile(active_graph)
 
 
