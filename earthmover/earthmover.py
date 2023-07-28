@@ -303,6 +303,7 @@ class Earthmover:
 
             for node_name in layer:
                 node = self.graph.ref(node_name)
+                self.logger.info(f"@@ Compiling node `{node.type}.{node.name}`.")
                 node.compile()
 
                 # Add the active nodes to the class attribute lists for the hashing file.
@@ -327,7 +328,7 @@ class Earthmover:
         for layer in list(nx.topological_generations(subgraph)):
             for node_name in layer:
                 node = self.graph.ref(node_name)
-                self.logger.info(f"Executing node `{node.type}.{node.name}`.")
+                self.logger.info(f"@@ Executing node `{node.type}.{node.name}`.")
                 if not node.data:
                     node.execute()  # Sets self.data in each node.
                     node.post_execute()
