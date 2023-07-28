@@ -160,6 +160,7 @@ class FileSource(Source):
         try:
             if not self.file and self.optional:
                 self.data = pd.DataFrame(columns = self.columns_list)
+                self.logger.debug(f"Initialized an empty DataFrame for source `{self.name}`.")
             else:
                 self.data = self.read_lambda(self.file, self.config)
             self.ensure_dask_dataframe()
