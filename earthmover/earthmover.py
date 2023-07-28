@@ -236,6 +236,10 @@ class Earthmover:
         for name, config in _transformations.items():
 
             node = Transformation(name, config, earthmover=self)
+            logging.info(
+                f"Transformation name: {name}\n"
+                f"Sources: {node.sources}"
+            )
             self.graph.add_node(f"$transformations.{name}", data=node)
 
             for source in node.sources:
