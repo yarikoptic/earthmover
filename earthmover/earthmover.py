@@ -236,7 +236,7 @@ class Earthmover:
         for name, config in _transformations.items():
 
             node = Transformation(name, config, earthmover=self)
-            logging.info(
+            self.logger.info(
                 f"Transformation name: {name}\n"
                 f"Sources: {node.sources}"
             )
