@@ -420,6 +420,7 @@ class Earthmover:
         dask.config.set({'temporary_directory': self.state_configs['tmp_dir']})
         for idx, component in enumerate( nx.weakly_connected_components(active_graph) ):
             self.logger.debug(f"processing component {idx}")
+            self.logger.debug(component)
 
             # load all sources! (in topological sort order)
             _subgraph = active_graph.subgraph(component)
