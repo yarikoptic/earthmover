@@ -23,6 +23,8 @@ class Transformation(Node):
         for idx, operation_config in enumerate(_operations, start=1):
 
             operation = Operation(self.name, operation_config, earthmover=self.earthmover)
+            self.logger.debug(f"    Operation: {self.name}")
+            self.logger.debug(operation_config)
             self.operations.append(operation)
 
             # Sources are defined in a 'source_list' or 'source' class attribute, but never both.
