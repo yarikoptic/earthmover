@@ -31,6 +31,7 @@ class Earthmover:
         "output_dir": "./",
         "macros": "",
         "show_graph": False,
+        "show_dask_graph": False,
         "log_level": "INFO",
         "show_stacktrace": False,
         "tmp_dir": tempfile.gettempdir(),
@@ -351,6 +352,14 @@ class Earthmover:
             self.metadata.update({"runtime_sec": (self.end_timestamp - self.start_timestamp).total_seconds()})
             with open(self.results_file, 'w') as fp:
                 fp.write(json.dumps(self.metadata, indent=4))
+
+        ### Draw a low-level Dask computation graph, based on destinations.
+        if self.state_configs['show_dask_graph']:
+            self.logger.info("saving dask compute graph image to `dask_compute_graph.svg`")
+            try:
+                dask.visualize(*map(lambda node: node.data, self.destinations), filename="dask_compute_graph.svg")
+            except RuntimeError:
+                self.logger.warning("Low-level Dask graph could not be written! Please install `graphviz` using `pip install graphviz`.")
 
 
     def test(self, tests_dir: str):

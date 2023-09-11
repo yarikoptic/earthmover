@@ -5,6 +5,7 @@ config:
   log_level: INFO
   show_stacktrace: False
   show_graph: False
+  show_dask_graph: False
   macros: >
     {% macro test() -%}
       testing!
