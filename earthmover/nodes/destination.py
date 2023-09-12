@@ -1,4 +1,4 @@
-import csv
+import dask
 import jinja2
 import os
 import pandas as pd
@@ -99,7 +99,7 @@ class FileDestination(Destination):
 
     def execute(self, **kwargs):
         """
-        There is a bug in Dask where where `dd.to_csv(mode='a', single_file=True)` fails.
+        There is a bug in Dask where `dd.to_csv(mode='a', single_file=True)` fails.
         This is resolved in 2023.8.1: https://docs.dask.org/en/stable/changelog.html#id7 
 
         :return:
@@ -117,22 +117,9 @@ class FileDestination(Destination):
         # Repartition before writing, if specified.
         self.data = self.opt_repartition(self.data)
 
-        # Verify the output directory exists.
-        os.makedirs(os.path.dirname(self.file), exist_ok=True)
-
-        # Write the optional header, the JSON lines as CSV (for performance), and the optional footer.
-        self.data.to_csv(
-            filename=self.file, single_file=True, mode='wt', index=False,
-            header=[self.header] if self.header else False,  # We must write the header directly due to aforementioned bug.
-            escapechar="\x01", sep="\x02", quoting=csv.QUOTE_NONE,  # Pretend to be CSV to improve performance
+        self.to_compute.append(
+            dask.delayed(self.write_to_disk)()
         )
-
-        if self.footer:
-            with open(self.file, 'a', encoding='utf-8') as fp:
-                fp.write(self.footer)
-
-        self.logger.debug(f"output `{self.file}` written")
-        self.size = os.path.getsize(self.file)
 
     def render_row(self, row: pd.Series):
         _data_tuple = row.to_dict()
@@ -148,3 +135,25 @@ class FileDestination(Destination):
             raise
 
         return json_string
+
+    def write_to_disk(self):
+        """
+
+        :return:
+        """
+        # Verify the output directory exists.
+        os.makedirs(os.path.dirname(self.file), exist_ok=True)
+
+        with open(self.file, 'w', encoding='utf-8') as fp:
+
+            if self.header:
+                fp.write(self.header + '\n')
+
+            for row in self.data:
+                fp.write(row + '\n')
+
+            if self.footer:
+                fp.write(self.footer)
+
+        self.logger.debug(f"output `{self.file}` written")
+        self.size = os.path.getsize(self.file)

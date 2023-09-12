@@ -10,7 +10,7 @@ from earthmover import util
 from typing import Dict, List, Tuple, Optional, Union
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from dask.dataframe.core import DataFrame
+    from dask.dataframe.core import DataFrame, Delayed
     from earthmover.earthmover import Earthmover
     from earthmover.error_handler import ErrorHandler
     from earthmover.yaml_parser import YamlMapping
@@ -53,6 +53,8 @@ class Node:
         # Optional variables for displaying progress and diagnostics.
         self.show_progress: bool = self.config.get('show_progress', self.earthmover.state_configs["show_progress"])
         self.progress_bar: ProgressBar = ProgressBar(minimum=10, dt=5.0)  # Always instantiate, but only use if `show_progress is True`.
+
+        self.to_compute: List['Delayed'] = []
 
     @abc.abstractmethod
     def compile(self):
@@ -122,6 +124,9 @@ class Node:
             self.num_rows, self.num_cols = self.data.shape
 
         if self.debug:
+            self.logger.info(
+                f"Computing shape of node: {self.type}s.{self.name}"
+            )
             self.num_rows = dask.compute(self.num_rows)[0]
             self.logger.debug(
                 f"Node {self.name}: {self.num_rows} rows; {self.num_cols} columns\n"

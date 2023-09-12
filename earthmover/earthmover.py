@@ -309,6 +309,27 @@ class Earthmover:
             _subgraph = active_graph.subgraph(component)
             self.execute(_subgraph)
 
+        ### Run the final compute across the optimized graph.
+        compute_collection = []  # Create a collection to compute all at once.
+        delayed_counts = {}  # Optionally, if `show_graph`, compute row-counts for all nodes.
+
+        for node_name, node in self.graph.get_node_data().items():
+            compute_collection.extend(node.to_compute)
+
+            if self.state_configs['show_graph']:
+                delayed_counts[node_name] = node.num_rows
+
+        compute_collection.append(delayed_counts)
+
+        # Run the compute!
+        compute_collection = dask.compute(compute_collection)[0]
+
+        # Reattach the computed counts to the nodes.
+        delayed_counts = compute_collection[-1]
+        for node_name, num_rows in delayed_counts.items():
+            node = self.graph.ref(node_name)
+            node.num_rows = num_rows
+
 
         ### Save run log only after a successful run! (in case of errors)
         # Note: `runs_file` is only defined in certain circumstances.
@@ -328,16 +349,6 @@ class Earthmover:
         ### Draw the graph again, this time add metadata about rows/cols/size at each node
         if self.state_configs['show_graph']:
             self.logger.info("saving dataflow graph image to `graph.png` and `graph.svg`")
-
-            # Compute all row number values at once for performance, then update the nodes.
-            computed_node_rows = dask.compute(
-                {node_name: node.num_rows for node_name, node in self.graph.get_node_data().items()}
-            )[0]
-
-            for node_name, num_rows in computed_node_rows.items():
-                node = self.graph.ref(node_name)
-                node.num_rows = num_rows
-
             active_graph.draw()
         
         ### Create structured output results_file if necessary
