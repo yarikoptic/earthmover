@@ -46,6 +46,7 @@ class Node:
 
         self.expectations: List[str] = None
         self.debug: bool = False
+        self.show_headers: bool = False
 
         # Internal Dask configs
         self.partition_size: Union[str, int] = self.config.get('repartition')
@@ -74,6 +75,7 @@ class Node:
 
         # Always check for debug and expectations
         self.debug = self.config.get('debug', False)
+        self.show_headers = self.config.get('show_headers', False)
         self.expectations = self.error_handler.assert_get_key(self.config, 'expect', dtype=list, required=False)
 
         pass
@@ -120,6 +122,9 @@ class Node:
             self.num_rows, self.num_cols = self.data.size, 1
         else:
             self.num_rows, self.num_cols = self.data.shape
+
+        if self.show_headers:
+            self.logger.info(self.data.columns)
 
         if self.debug:
             self.num_rows = dask.compute(self.num_rows)[0]
